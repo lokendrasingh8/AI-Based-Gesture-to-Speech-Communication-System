@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gesture-to-Speech Communication System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .video-container {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+        }
+        #webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .prediction-box {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .prediction-label {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .metrics {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .metric {
+            text-align: center;
+            flex: 1;
+        }
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .progress {
+            height: 20px;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .status-active {
+            background-color: #2ecc71;
+            box-shadow: 0 0 10px #2ecc71;
+            animation: pulse 1.5s infinite;
+        }
+        .status-inactive {
+            background-color: #e74c3c;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .guide-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 3px dashed rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .btn-custom {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .btn-custom:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gesture-to-Speech Communication System</h1>
+            <p class="lead">Using Deep Learning to convert hand gestures into speech</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="video-container">
+                    <video id="webcam" autoplay playsinline></video>
+                    <div class="overlay">
+                        <div class="guide-box"></div>
+                    </div>
+                </div>
+                <div class="controls mt-3">
+                    <button id="startBtn" class="btn btn-custom me-2">Start Camera</button>
+                    <button id="stopBtn" class="btn btn-custom" disabled>Stop Camera</button>
+                    <button id="testAudioBtn" class="btn btn-custom mt-2">Test Audio</button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="prediction-box">
+                    <div class="d-flex align-items-center mb-3">
+                        <div id="statusIndicator" class="status-indicator status-inactive"></div>
+                        <span id="statusText">Waiting for camera...</span>
+                    </div>
+                    
+                    <h3>Detected Gesture</h3>
+                    <div class="prediction-label" id="prediction">None</div>
+                    <p id="predictionHint" class="text-muted small">Start the camera to begin detection.</p>
+                    
+                    <div class="metrics">
+                        <div class="metric">
+                            <div>Confidence</div>
+                            <div class="metric-value" id="confidence">0%</div>
+                        </div>
+                        <div class="metric">
+                            <div>Stability</div>
+                            <div class="metric-value" id="stability">0%</div>
+                        </div>
+                    </div>
+                    
+                    <h5>Stability</h5>
+                    <div class="progress">
+                        <div id="stabilityBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    
+                    <h5>Confidence</h5>
+                    <div class="progress">
+                        <div id="confidenceBar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Last spoken:</h5>
+                        <p id="lastSpoken">None</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <p>Place your hand in the center of the frame and make a gesture</p>
+            <p><small>Developed by Lokendra kumar </small></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/script.js"></script>
+</body>
+</html>

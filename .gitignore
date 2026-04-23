@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+.venv/
+venv/
+ENV/
+env/
+
+*.log
+
+Codebase/gesture_web_app_UI_scripts/static/output.mp3
+
+.DS_Store
+Thumbs.db
